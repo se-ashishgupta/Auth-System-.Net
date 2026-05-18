@@ -1,6 +1,8 @@
 using AuthSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using AuthSystem.Services;
+using AuthSystem.Middleware;
+using AuthSystem.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,16 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))); // (Npgsql is the .NET driver for Postgres.)
 
-// Add services to the container.
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
+// Services
+builder.Services.AddApplicationServices();
 
+// Authentication + Authorization
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Custom exception middleware - must be FIRST
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -26,7 +32,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

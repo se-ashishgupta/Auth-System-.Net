@@ -110,4 +110,16 @@ public class AuthService : IAuthService
 
         await _db.SaveChangesAsync();
     }
+
+    public async Task LogoutAsync(Guid userId)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if(user == null)
+            throw new Exception("User not found.");
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiry = null;
+
+        await _db.SaveChangesAsync();
+    }
 }
