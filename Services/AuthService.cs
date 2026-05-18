@@ -52,16 +52,62 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
-        throw new NotImplementedException(); // Step 5
+        if(!await _db.Users.AnyAsync(u => u.Email == request.Email))
+            throw new Exception("Invalid email or password.");
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if(user == null)
+            throw new Exception("Invalid email or password.");
+
+        if(!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            throw new Exception("Invalid email or password.");
+
+        user.RefreshToken = _tokenService.GenerateRefreshToken();
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        await _db.SaveChangesAsync();
+
+        return new AuthResponse
+        {
+            AccessToken = _tokenService.GenerateAccessToken(user),
+            RefreshToken = user.RefreshToken,
+            Username = user.Username,
+            Email = user.Email
+        };
     }
 
-    public async Task<AuthResponse> RefreshTokenAsync(string refreshToken)
+    public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request)
     {
-        throw new NotImplementedException(); // Step 6
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken);
+        if(user == null)
+            throw new Exception("Invalid refresh token.");
+
+        if(user.RefreshTokenExpiry < DateTime.UtcNow)
+            throw new Exception("Refresh token expired.");
+
+        user.RefreshToken = _tokenService.GenerateRefreshToken();
+        user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        await _db.SaveChangesAsync();
+
+        return new AuthResponse
+        {
+            AccessToken = _tokenService.GenerateAccessToken(user),
+            RefreshToken = user.RefreshToken,
+            Username = user.Username,
+            Email = user.Email
+        };
     }
 
-    public async Task RevokeTokenAsync(string refreshToken)
+    public async Task RevokeTokenAsync(RevokeTokenRequest request)
     {
-        throw new NotImplementedException(); // Step 7
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == request.RefreshToken);
+        if(user == null)
+            throw new Exception("Invalid refresh token.");
+
+        user.RefreshToken = null;
+        user.RefreshTokenExpiry = null; 
+
+        await _db.SaveChangesAsync();
     }
 }

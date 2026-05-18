@@ -25,3 +25,14 @@ public class RefreshTokenRequest
 {
     public string RefreshToken { get; set; } = string.Empty;
 }
+
+
+public class RevokeTokenRequest
+{
+    public string RefreshToken { get; set; } = string.Empty;
+}
+
+public class RevokeTokenResponse
+{
+    public string Message { get; set; } = string.Empty;
+}

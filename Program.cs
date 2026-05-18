@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Database Context
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))); // (Npgsql is the .NET driver for Postgres.)
 
 // Add services to the container.
 builder.Services.AddScoped<IAuthService, AuthService>();
