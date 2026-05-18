@@ -1,6 +1,6 @@
 using AuthSystem.Data;
 using Microsoft.EntityFrameworkCore;
-
+using AuthSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +9,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
